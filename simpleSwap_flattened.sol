@@ -638,12 +638,15 @@ contract SimpleSwap is ERC20 {
     /// @dev Users are able to add liquidity to the management pool.
     /// @dev It's a must to use this function to initialize the management pool.
     function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB, uint liquidity) {
+        address __tokenA = _tokenA;
+        address __tokenB = _tokenB;
+
         /// Initializing token addresses for  and check for wrong tokens
-        if (_tokenA == address(0) && _tokenB == address(0)) {
-            _tokenA = tokenA;
-            _tokenB = tokenB;
+        if (__tokenA == address(0) && __tokenB == address(0)) {
+            __tokenA = tokenA;
+            __tokenB = tokenB;
         } else {
-            require(_tokenA == tokenA && _tokenB == tokenB, "Can't swap those tokens!");
+            require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap tokens");
         }
 
         /// Approve so SC will be able to transfer tokens for the user
@@ -664,10 +667,13 @@ contract SimpleSwap is ERC20 {
 
     /// @dev Users are able to withdraw their tokens based on their current liquidity token amount.
     function removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB) {
+        address __tokenA = _tokenA;
+        address __tokenB = _tokenB;
+        
         /// Validations
-        require(_tokenA != address(0) && _tokenB != address(0), "Must add liquidity first");
-        require(_tokenA == tokenA && _tokenB == tokenB, "Can't swap those tokens!");
-        require(balanceOf(msg.sender) >= liquidity, "Insufficient liquidity");
+        require(__tokenA != address(0) && __tokenB != address(0), "Add liquidity first");
+        require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap tokens");
+        require(balanceOf(msg.sender) >= liquidity, "Not enough liquidity");
         require(ERC20(tokenA).balanceOf(address(this)) >= amountAMin, "Not enough tokens A");
         require(ERC20(tokenB).balanceOf(address(this)) >= amountBMin, "Not enough tokens B");
 
@@ -677,8 +683,8 @@ contract SimpleSwap is ERC20 {
         _burn(msg.sender, liquidity);
 
         /// Calculate amount of tokens to transfer
-        uint withdrawnA = (liquidity / _totalSupply) * ERC20(tokenA).balanceOf(address(this));
-        uint withdrawnB = (liquidity / _totalSupply) * ERC20(tokenB).balanceOf(address(this));
+        uint withdrawnA = ERC20(tokenA).balanceOf(address(this)) * (liquidity / _totalSupply);
+        uint withdrawnB = ERC20(tokenB).balanceOf(address(this)) * (liquidity / _totalSupply);
 
         /// Validate min amount of tokens
         require(withdrawnA >= amountAMin && withdrawnB >= amountBMin, "Not enough liquidity");
@@ -693,12 +699,15 @@ contract SimpleSwap is ERC20 {
 
     /// @dev Swaps one token for another in exact amounts.
     function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts) {
+        address __tokenA = _tokenA;
+        address __tokenB = _tokenB;
+        
         /// Validations
-        require((path[0] == _tokenA || path[1] == _tokenA) && (path[0] == _tokenB || path[1]== _tokenB), "Can't swap this tokens");
-        if(path[1] == _tokenB) {
-            require(ERC20(_tokenB).balanceOf(address(this)) >= amountOutMin, "Not enough tokens B");
+        require((path[0] == __tokenA || path[1] == __tokenA) && (path[0] == __tokenB || path[1]== __tokenB), "Can't swap this tokens");
+        if(path[1] == __tokenB) {
+            require(ERC20(__tokenB).balanceOf(address(this)) >= amountOutMin, "Not enough tokens B");
         } else {
-            require(ERC20(_tokenA).balanceOf(address(this)) >= amountOutMin, "Not enough tokens A");
+            require(ERC20(__tokenA).balanceOf(address(this)) >= amountOutMin, "Not enough tokens A");
         }
 
         /// Approve and transfer amountIn
@@ -707,10 +716,10 @@ contract SimpleSwap is ERC20 {
 
         /// Compute amount Out
         uint withdrawn;
-        if(path[0] == _tokenA) {
-            withdrawn = (amountIn * ERC20(_tokenB).balanceOf(address(this))) / (ERC20(_tokenA).balanceOf(address(this)) + amountIn);
+        if(path[0] == __tokenA) {
+            withdrawn = (amountIn * ERC20(__tokenB).balanceOf(address(this))) / (ERC20(__tokenA).balanceOf(address(this)) + amountIn);
         } else {
-            withdrawn = (amountIn * ERC20(_tokenA).balanceOf(address(this))) / (ERC20(_tokenB).balanceOf(address(this)) + amountIn);
+            withdrawn = (amountIn * ERC20(__tokenA).balanceOf(address(this))) / (ERC20(__tokenB).balanceOf(address(this)) + amountIn);
         }
 
         /// Check if withdrawn value is valid
@@ -729,11 +738,14 @@ contract SimpleSwap is ERC20 {
 
     /// @dev Calculates current price of a token given another.
     function getPrice(address tokenA, address tokenB) external view returns (uint price) {
-        /// Validations
-        require(_tokenA != address(0) && _tokenB != address(0), "Must add liquidity first");
-        require(_tokenA == tokenA && _tokenB == tokenB, "Can't swap those tokens!");
+        address __tokenA = _tokenA;
+        address __tokenB = _tokenB;
 
-        return (ERC20(_tokenB).balanceOf(address(this)) * 1e18) / ERC20(_tokenA).balanceOf(address(this));
+        /// Validations
+        require(__tokenA != address(0) && __tokenB != address(0), "Must add liquidity first");
+        require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap those tokens!");
+
+        return (ERC20(__tokenB).balanceOf(address(this)) * 1e18) / ERC20(__tokenA).balanceOf(address(this));
 
     }
 
