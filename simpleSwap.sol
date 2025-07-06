@@ -23,8 +23,8 @@ contract SimpleSwap is ERC20 {
 
         /// Initializing token addresses for  and check for wrong tokens
         if (__tokenA == address(0) && __tokenB == address(0)) {
-            __tokenA = tokenA;
-            __tokenB = tokenB;
+            _tokenA = tokenA;
+            _tokenB = tokenB;
         } else {
             require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap tokens");
         }
@@ -83,7 +83,7 @@ contract SimpleSwap is ERC20 {
         address __tokenB = _tokenB;
         
         /// Validations
-        require((path[0] == __tokenA || path[1] == __tokenA) && (path[0] == __tokenB || path[1]== __tokenB), "Can't swap this tokens");
+        require((path[0] == __tokenA || path[1] == __tokenA) && (path[0] == __tokenB || path[1]== __tokenB), "Can't swap these");
         if(path[1] == __tokenB) {
             require(ERC20(__tokenB).balanceOf(address(this)) >= amountOutMin, "Not enough tokens B");
         } else {
@@ -122,8 +122,8 @@ contract SimpleSwap is ERC20 {
         address __tokenB = _tokenB;
 
         /// Validations
-        require(__tokenA != address(0) && __tokenB != address(0), "Must add liquidity first");
-        require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap those tokens!");
+        require(__tokenA != address(0) && __tokenB != address(0), "Add liquidity first");
+        require(__tokenA == tokenA && __tokenB == tokenB, "Can't swap these");
 
         return (ERC20(__tokenB).balanceOf(address(this)) * 1e18) / ERC20(__tokenA).balanceOf(address(this));
 
